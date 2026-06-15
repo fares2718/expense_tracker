@@ -2,7 +2,9 @@ import 'package:expense_tracker/models/expense.dart';
 import 'package:flutter/material.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key,required this.onAddExpense});
+
+  final void Function(Expense expense) onAddExpense;
 
   @override
   State<NewExpense> createState() {
@@ -31,6 +33,38 @@ class _NewExpenseState extends State<NewExpense> {
     setState(() {
       _selectedDate = pickedDate;
     });
+  }
+
+  void _submitExpenseData() {
+    final enteredAmount = double.tryParse(_amountController.text);
+    final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
+    if (_titleController.text.trim().isEmpty ||
+        amountIsInvalid ||
+        _selectedDate == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invalid Input'),
+          content: const Text(
+            'Please check your entered title,amount,and date',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: Text('Ok'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final Expense newExpence = Expense(title: _titleController.text.trim(), 
+    amount: enteredAmount, date: _selectedDate!, category: _selectedCategory);
+
+    widget.onAddExpense(newExpence);
   }
 
   @override
@@ -84,7 +118,7 @@ class _NewExpenseState extends State<NewExpense> {
               ),
             ],
           ),
-          const SizedBox(height: 16,),
+          const SizedBox(height: 16),
           Row(
             children: [
               DropdownButton(
@@ -109,10 +143,13 @@ class _NewExpenseState extends State<NewExpense> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('Cancele'),
+                child: const Text('Cancel'),
               ),
               const Spacer(),
-              ElevatedButton(onPressed: () {}, child: const Text('Save')),
+              ElevatedButton(
+                onPressed: _submitExpenseData,
+                child: const Text('Save'),
+              ),
             ],
           ),
         ],
